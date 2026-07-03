@@ -81,14 +81,14 @@
         .tap-msg { margin-top: 25px; color: #ff5c8a; font-size: 1.2rem; animation: blink 1s infinite; text-align: center; font-weight: 400; }
         @keyframes blink { 50% { opacity: 0.5; } }
 
-        /* --- PAGE 2.5: QUESTION MODAL/PANEL --- */
+        /* --- PAGE 2.5: QUESTION PANEL --- */
         .question-box {
             background: white; padding: 25px; border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center;
             max-width: 320px; width: 100%; box-sizing: border-box;
             animation: zoomIn 0.5s ease;
         }
-        .question-box p { font-size: 1.05rem; line-height: 1.6; margin-bottom: 20px; color: var(--accent); }
+        .question-box p { font-size: 1.1rem; line-height: 1.6; margin-bottom: 20px; color: var(--accent); white-space: pre-line; }
         .answer-input {
             width: 100%; padding: 12px 15px; border: 2px solid var(--secondary);
             border-radius: 12px; font-family: 'Kanit'; font-size: 1rem;
@@ -104,10 +104,16 @@
         .btn-submit:hover { background: #e04b75; }
 
         /* --- PAGE 3: SCRATCH --- */
+        .scratch-container {
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px;
+        }
         .scratch-box {
-            position: relative; width: 300px; height: 240px; /* อัตราส่วน 5:4 (300x240) */
+            position: relative; width: 300px; height: 240px;
             border: 8px solid white; border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.15); overflow: hidden;
+        }
+        .scratch-hint-text {
+            color: var(--primary); font-size: 1.2rem; font-weight: 600; text-align: center;
         }
 
         /* --- PAGE 4: GALLERY GAME --- */
@@ -182,12 +188,47 @@
         .final-msg-container.show-final .final-msg-box { transform: scale(1) translateY(0); opacity: 1; }
         .final-msg-box h1 { color: var(--primary); font-size: 2.2rem; margin-bottom: 15px; white-space: pre-line; }
         .final-msg-box p { font-size: 1.1rem; line-height: 1.7; color: #555; white-space: pre-line; }
+
+        /* --- CUSTOM ALERT & ANSWER MANAGEMENT --- */
+        .custom-alert {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+            background: #ffecf2; color: #d6336c; padding: 12px 25px; border-radius: 30px;
+            border: 2px solid var(--secondary); box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            z-index: 999; font-weight: 600; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .custom-alert.show { transform: translateX(-50%) translateY(0); }
+
+        .btn-history {
+            position: absolute; top: 15px; left: 15px; background: white; border: 2px solid var(--secondary);
+            color: var(--primary); padding: 5px 12px; border-radius: 15px; font-family: 'Kanit';
+            font-size: 0.85rem; cursor: pointer; z-index: 90; display: flex; align-items: center; gap: 5px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .history-panel {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6);
+            z-index: 500; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px);
+        }
+        .history-box {
+            background: white; padding: 25px; border-radius: 20px; max-width: 320px; width: 90%;
+            max-height: 70vh; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .history-list { overflow-y: auto; margin: 15px 0; padding-right: 5px; flex-grow: 1; }
+        .history-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px; border-bottom: 1px solid #eee; word-break: break-word; gap: 10px;
+        }
+        .btn-del { background: #ffeaee; color: #ff4d6d; border: none; padding: 5px 10px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; }
+        .btn-close-hist { background: var(--accent); color: white; border: none; padding: 8px 20px; border-radius: 20px; cursor: pointer; font-family: 'Kanit'; }
     </style>
 </head>
 <body onclick="playAudio()">
 
     <audio id="bgm" loop><source src="song.mp3" type="audio/mpeg"></audio>
     <div class="bg-floaters" id="bgFloaters"></div>
+    <div class="custom-alert" id="customAlert">พิมพ์คำตอบให้เค้าหน่อยน้าา 🥺</div>
+
+    <!-- ปุ่มเปิดคลังคำตอบลับสำหรับเจ้าของเว็บ (จะเห็นที่หน้าแรกซ้ายบน) -->
+    <button class="btn-history" onclick="openHistory(event)">📂 คลังคำตอบ</button>
 
     <div id="page1" class="page active">
         <div class="chase-area">
@@ -216,7 +257,11 @@
 
     <div id="pageQuestion" class="page">
         <div class="question-box">
-            <p>เราชอบเวลาที่ได้อยู่กับเธอ และได้กอดเธอนะ\nทุกครั้งมันทำให้เรารู้สึกว่า…\nอยากมีเธออยู่ไปนานๆ\nเธออยากไปต่อกับเรามั้ย</p>
+            <p>เราชอบเวลาที่ได้อยู่กับเธอ
+และได้กอดเธอนะ
+ทุกครั้งมันทำให้เรารู้สึกว่า…
+อยากมีเธออยู่ไปนานๆ
+เธออยากไปต่อกับเรามั้ย?</p>
             <input type="text" id="partnerAnswer" class="answer-input" placeholder="พิมพ์คำตอบตรงนี้...">
             <br>
             <button class="btn-submit" onclick="submitAnswer()">ส่งคำตอบ 💞</button>
@@ -224,23 +269,25 @@
     </div>
 
     <div id="page3" class="page">
-        <div class="scratch-box">
-            <img src="photo7.jpg" style="width:100%; height:100%; object-fit:cover;">
-            <canvas id="scratchCanvas" width="300" height="240" style="position:absolute; top:0; left:0; cursor:pointer;"></canvas>
+        <div class="scratch-container">
+            <div class="scratch-box">
+                <img src="photo7.jpg" style="width:100%; height:100%; object-fit:cover;">
+                <canvas id="scratchCanvas" width="300" height="240" style="position:absolute; top:0; left:0; cursor:pointer;"></canvas>
+            </div>
+            <div class="scratch-hint-text">ลองขูดดูสิ ✨</div>
         </div>
     </div>
 
     <div id="page4" class="page" style="padding:0;">
         <div class="inventory">
-            <div class="inv-slot" id="slot1"></div><div class="inv-slot" id="slot2"></div><div class="inv-slot" id="slot3"></div><div class="inv-slot" id="slot4"></div><div class="inv-slot" id="slot5"></div>
+            <div class="inv-slot" id="slot1"></div><div class="inv-slot" id="slot2"></div><div class="inv-slot" id="slot3"></div><div class="inv-slot" id="slot4"></div>
         </div>
-        <div class="game-hint">ช่วยตามหารูปที่ซ่อนอยู่ 5 ใบหน่อยนะ! 👇</div>
+        <div class="game-hint">ช่วยตามหารูปที่ซ่อนอยู่ 4 ใบหน่อยนะ! 👇</div>
         <div class="room-scene">
             <div class="hidden-item" style="top:15%; right:25%; transform:rotate(5deg);" onclick="foundPhoto(1, this)"><img src="photo1.jpg"></div>
             <div class="hidden-item" style="bottom:20%; left:10%; transform:rotate(-8deg);" onclick="foundPhoto(2, this)"><img src="photo2.jpg"></div>
             <div class="hidden-item" style="top:45%; left:15%; z-index:1;" onclick="foundPhoto(3, this)"><img src="photo3.jpg"></div>
             <div class="hidden-item" style="bottom:15%; right:30%; transform:rotate(12deg);" onclick="foundPhoto(4, this)"><img src="photo4.jpg"></div>
-            <div class="hidden-item" style="bottom:8%; left:40%; transform:rotate(-5deg);" onclick="foundPhoto(5, this)"><img src="photo5.jpg"></div>
         </div>
     </div>
 
@@ -259,16 +306,26 @@
         </div>
     </div>
 
+    <!-- หน้าต่างจัดการคำตอบย้อนหลัง (History Panel) -->
+    <div class="history-panel" id="historyPanel" onclick="closeHistory()">
+        <div class="history-box" onclick="event.stopPropagation()">
+            <h3 style="margin-top:0; color:var(--primary); text-align:center;">📂 คำตอบที่เคยพิมพ์ทั้งหมด</h3>
+            <div class="history-list" id="historyList"></div>
+            <div style="text-align:center; margin-top:10px;">
+                <button class="btn-close-hist" onclick="closeHistory()">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const photos = [
             { src: "photo1.jpg", caption: "วันแรกที่ได้เจอเธอ น่ารักมากๆเลย" },
             { src: "photo2.jpg", caption: "อยากโดนเธอกอดแบบนี้…ไปตลอด🫂🩷" },
             { src: "photo3.jpg", caption: "อยากตื่นไปทำงานพร้อมกับเธอทุกๆวัน" },
-            { src: "photo4.jpg", caption: "ขอบคุณนะ…ที่เตรียมกับข้าวให้เราทุกเย็น\n(ล่ะจะไม่ให้อ้วนได้ไง)🤣" },
-            { src: "photo5.jpg", caption: "รูปนี้เธอน่ารักมากกกก💞" }
+            { src: "photo4.jpg", caption: "ขอบคุณนะ…ที่เตรียมกับข้าวให้เราทุกเย็น\n(ล่ะจะไม่ให้อ้วนได้ไง)🤣" }
         ];
 
-        let savedAnswer = ""; // ตัวแปรสำหรับเก็บคำตอบที่พิมพ์
+        let savedAnswer = ""; 
 
         let audioPlaying = false;
         function playAudio() {
@@ -329,27 +386,32 @@
             if(heartPercent > 100) heartPercent = 100;
             document.getElementById('waterLevel').setAttribute('y', 200 - (200 * (heartPercent/100)));
             document.getElementById('percent').innerText = heartPercent + "%";
-            // เมื่อหัวใจเต็ม หยุดแป๊บนึง (600ms) แล้วไปที่หน้าคำถาม (pageQuestion)
             if(heartPercent >= 100) setTimeout(() => goTo('pageQuestion'), 600);
         }
 
-        // หน้าคำถาม Logic
+        // หน้าคำถาม Logic + ระบบบันทึกคำตอบลงคลัง
         function submitAnswer() {
             const inputVal = document.getElementById('partnerAnswer').value.trim();
             if(inputVal === "") {
-                alert("พิมพ์คำตอบให้เค้าหน่อยน้าา 🥺");
+                const alertBox = document.getElementById('customAlert');
+                alertBox.classList.add('show');
+                setTimeout(() => alertBox.classList.remove('show'), 2500);
                 return;
             }
-            savedAnswer = inputVal; // บันทึกคำตอบเก็บไว้ดูตอนท้าย
-            goTo('page3'); // ไปหน้าขูดรูป
+            savedAnswer = inputVal;
+            
+            // บันทึกคำตอบลง LocalStorage (ค้างไว้ดูย้อนหลังได้)
+            let answersArr = JSON.parse(localStorage.getItem('myLoveAnswers')) || [];
+            answersArr.push(inputVal);
+            localStorage.setItem('myLoveAnswers', JSON.stringify(answersArr));
+
+            goTo('page3'); 
         }
 
-        // หน้า 3 Logic (ขูดเสร็จ ค้างไว้ 3 วินาที (3000ms) ค่อยเปลี่ยนหน้า)
+        // หน้า 3 Logic (ขูด 98% ค้างไว้ 3 วินาที)
         function startScratch() {
             const c = document.getElementById('scratchCanvas'); const ctx = c.getContext('2d');
-            ctx.fillStyle = '#ffacc5'; ctx.fillRect(0,0,300,240); // ขนาด 5:4
-            ctx.fillStyle = '#fff'; ctx.font = 'bold 24px Kanit'; ctx.textAlign = 'center';
-            ctx.fillText('ลองขูดดูสิ', 150, 120);
+            ctx.fillStyle = '#ffacc5'; ctx.fillRect(0,0,300,240); 
             
             let isDrawing = false;
             let scratchDone = false;
@@ -364,9 +426,8 @@
                 const d = ctx.getImageData(0,0,300,240).data;
                 let cleared = 0;
                 for(let i=3; i<d.length; i+=4) if(d[i]===0) cleared++;
-                if(cleared/(300*240) >= 0.98) { // แก้ไขจุดนี้: เปลี่ยนจาก 0.8 เป็น 0.98 (98%)
+                if(cleared/(300*240) >= 0.98) { 
                     scratchDone = true;
-                    // ดีเลย์ค้างไว้ 3 วินาที (3000 มิลลิวินาที) ก่อนไปหน้า 4
                     setTimeout(() => goTo('page4'), 3000);
                 }
             }
@@ -385,7 +446,7 @@
             c.addEventListener('touchmove', move);
         }
 
-        // หน้า 4 Logic
+        // หน้า 4 Logic (เหลือ 4 รูป)
         let collected = 0;
         function foundPhoto(idx, el) {
             document.getElementById('previewImg').src = photos[idx-1].src;
@@ -399,13 +460,49 @@
             const slot = document.getElementById('slot' + window.lastFoundIdx);
             slot.classList.add('filled'); slot.innerHTML = `<img src="${photos[window.lastFoundIdx-1].src}">`;
             collected++;
-            if(collected === 5) {
-                // แสดงข้อความและคำตอบในหน้าต่างสุดท้าย
-                document.getElementById('finalTitle').innerText = `เป็นแฟนกับเค้านะ 🫂💖`;
-                document.getElementById('finalText').innerText = `ทุกรูปที่เค้าเลือกมา คือความทรงจำ\nตั้งแต่ช่วงแรกที่เราได้รู้จักกัน\nเค้าอยากมีกอดอุ่นๆจากเจอ\nเธอคือคนที่อยากให้อยู่ข้างๆ ในทุกๆวันนะครับ\n\n(คำตอบที่เธอพิมพ์ตอบเค้า: "${savedAnswer}")`;
+            if(collected === 4) { // เปลี่ยนเป็น 4 รูป
+                document.getElementById('finalTitle').innerText = `เป็นแฟนกับเค้านะ🫂💖`;
+                document.getElementById('finalText').innerText = `ทุกรูปที่เค้าเลือกมา คือความทรงจำ\nตั้งแต่ช่วงแรกที่เราได้รู้จักกัน\nเค้าอยากมีกอดอุ่นๆจากเธอ\nเธอคือคนที่อยากให้อยู่ข้างๆ ในทุกๆวันนะครับ\n\n(คำตอบที่เธอพิมพ์ตอบเค้า: "${savedAnswer}")`;
                 
                 setTimeout(() => document.getElementById('finalMsgContainer').classList.add('show-final'), 800);
             }
+        }
+
+        // --- ฟังก์ชันสำหรับการจัดการคลังคำตอบลับ ---
+        function openHistory(e) {
+            e.stopPropagation(); // ไม่ให้ไปทับกับฟังก์ชันเล่นเสียง
+            const panel = document.getElementById('historyPanel');
+            const list = document.getElementById('historyList');
+            list.innerHTML = "";
+            
+            let answersArr = JSON.parse(localStorage.getItem('myLoveAnswers')) || [];
+            
+            if(answersArr.length === 0) {
+                list.innerHTML = "<p style='text-align:center; color:#999;'>ยังไม่มีคำตอบที่ส่งมาในเครื่องนี้</p>";
+            } else {
+                answersArr.forEach((ans, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'history-item';
+                    item.innerHTML = `
+                        <span>${index + 1}. <b>${ans}</b></span>
+                        <button class="btn-del" onclick="deleteAnswer(${index})">🗑️ ลบ</button>
+                    `;
+                    list.appendChild(item);
+                });
+            }
+            panel.style.display = 'flex';
+        }
+
+        function closeHistory() {
+            document.getElementById('historyPanel').style.display = 'none';
+        }
+
+        function deleteAnswer(index) {
+            let answersArr = JSON.parse(localStorage.getItem('myLoveAnswers')) || [];
+            answersArr.splice(index, 1);
+            localStorage.setItem('myLoveAnswers', JSON.stringify(answersArr));
+            // รีเฟรชรายการในหน้าต่างใหม่
+            openHistory({ stopPropagation: () => {} });
         }
     </script>
 </body>
