@@ -227,8 +227,7 @@
     <div class="bg-floaters" id="bgFloaters"></div>
     <div class="custom-alert" id="customAlert">พิมพ์คำตอบให้เค้าหน่อยน้าา 🥺</div>
 
-    <!-- ปุ่มเปิดคลังคำตอบลับสำหรับเจ้าของเว็บ (จะเห็นที่หน้าแรกซ้ายบน) -->
-    <button class="btn-history" onclick="openHistory(event)">📂 คลังคำตอบ</button>
+    <button class="btn-history" onclick="openHistory(event)">💌 คำตอบ</button>
 
     <div id="page1" class="page active">
         <div class="chase-area">
@@ -306,10 +305,9 @@
         </div>
     </div>
 
-    <!-- หน้าต่างจัดการคำตอบย้อนหลัง (History Panel) -->
     <div class="history-panel" id="historyPanel" onclick="closeHistory()">
         <div class="history-box" onclick="event.stopPropagation()">
-            <h3 style="margin-top:0; color:var(--primary); text-align:center;">📂 คำตอบที่เคยพิมพ์ทั้งหมด</h3>
+            <h3 style="margin-top:0; color:var(--primary); text-align:center;">💌 คำตอบทั้งหมด</h3>
             <div class="history-list" id="historyList"></div>
             <div style="text-align:center; margin-top:10px;">
                 <button class="btn-close-hist" onclick="closeHistory()">ปิดหน้าต่าง</button>
@@ -324,8 +322,6 @@
             { src: "photo3.jpg", caption: "อยากตื่นไปทำงานพร้อมกับเธอทุกๆวัน" },
             { src: "photo4.jpg", caption: "ขอบคุณนะ…ที่เตรียมกับข้าวให้เราทุกเย็น\n(ล่ะจะไม่ให้อ้วนได้ไง)🤣" }
         ];
-
-        let savedAnswer = ""; 
 
         let audioPlaying = false;
         function playAudio() {
@@ -398,7 +394,6 @@
                 setTimeout(() => alertBox.classList.remove('show'), 2500);
                 return;
             }
-            savedAnswer = inputVal;
             
             // บันทึกคำตอบลง LocalStorage (ค้างไว้ดูย้อนหลังได้)
             let answersArr = JSON.parse(localStorage.getItem('myLoveAnswers')) || [];
@@ -460,9 +455,9 @@
             const slot = document.getElementById('slot' + window.lastFoundIdx);
             slot.classList.add('filled'); slot.innerHTML = `<img src="${photos[window.lastFoundIdx-1].src}">`;
             collected++;
-            if(collected === 4) { // เปลี่ยนเป็น 4 รูป
+            if(collected === 4) { 
                 document.getElementById('finalTitle').innerText = `เป็นแฟนกับเค้านะ🫂💖`;
-                document.getElementById('finalText').innerText = `ทุกรูปที่เค้าเลือกมา คือความทรงจำ\nตั้งแต่ช่วงแรกที่เราได้รู้จักกัน\nเค้าอยากมีกอดอุ่นๆจากเธอ\nเธอคือคนที่อยากให้อยู่ข้างๆ ในทุกๆวันนะครับ\n\n(คำตอบที่เธอพิมพ์ตอบเค้า: "${savedAnswer}")`;
+                document.getElementById('finalText').innerText = `ทุกรูปที่เค้าเลือกมา คือความทรงจำ\nตั้งแต่ช่วงแรกที่เราได้รู้จักกัน\nเค้าอยากมีกอดอุ่นๆจากเธอ\nเธอคือคนที่อยากให้อยู่ข้างๆ ในทุกๆวันนะครับ`;
                 
                 setTimeout(() => document.getElementById('finalMsgContainer').classList.add('show-final'), 800);
             }
@@ -470,7 +465,7 @@
 
         // --- ฟังก์ชันสำหรับการจัดการคลังคำตอบลับ ---
         function openHistory(e) {
-            e.stopPropagation(); // ไม่ให้ไปทับกับฟังก์ชันเล่นเสียง
+            e.stopPropagation(); 
             const panel = document.getElementById('historyPanel');
             const list = document.getElementById('historyList');
             list.innerHTML = "";
@@ -501,7 +496,6 @@
             let answersArr = JSON.parse(localStorage.getItem('myLoveAnswers')) || [];
             answersArr.splice(index, 1);
             localStorage.setItem('myLoveAnswers', JSON.stringify(answersArr));
-            // รีเฟรชรายการในหน้าต่างใหม่
             openHistory({ stopPropagation: () => {} });
         }
     </script>
